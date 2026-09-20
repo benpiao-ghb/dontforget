@@ -157,6 +157,20 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:90%}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* phone: fit all 7 days on one screen */
+@media(max-width:700px){
+  .wrap{padding:0 8px 90px}.bar{padding:10px 12px}
+  .card{padding:12px;margin-top:12px}
+  .cal-hgrid{min-width:0}
+  .cal-colhead,.cal-allday,.cal-body{grid-template-columns:32px repeat(7,minmax(0,1fr))}
+  .cal-colhead .ch{font-size:10px;padding:4px 0}.cal-colhead .ch .dnum{font-size:13px}
+  .cal-axis .hl{font-size:9px;right:3px}
+  .cal-allday .adlabel{font-size:9px;padding:4px 2px}
+  .ad-item{font-size:9px;padding:1px 3px}
+  .evt{padding:2px 2px;font-size:9.5px;border-left-width:2px;border-radius:5px}
+  .evt .es{display:none}
+  .evt .et{white-space:normal;word-break:break-all;line-height:1.2}
+}
 /* print this week */
 .print-only{display:none}
 @media print{
