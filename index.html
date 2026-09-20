@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>别忘了 · 家庭日历</title>
+<style>
+:root{
+  --bg:#f3f2ec;--surface:#ffffff;--ink:#1b1d29;--muted:#73748a;
+  --line:#e4e2d8;--line-strong:#d3d0c4;
+  --primary:#2f3a8c;--primary-soft:#e9ebf7;
+  --accent:#c1741f;--accent-soft:#f6ecdc;
+  --done:#2c7a57;--done-soft:#e3f0ea;
+  --danger:#b03a3a;--danger-soft:#f6e6e4;
+  --radius:10px;--radius-lg:14px;
+  --hour:44px;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit;font-size:14px;color:var(--ink)}
+h1,h2,h3{margin:0;font-weight:600}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px 90px}
+header{position:sticky;top:0;z-index:30;background:rgba(243,242,236,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{max-width:1080px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand .mark{font-size:20px;font-weight:700;letter-spacing:-.01em}.brand .mark b{color:var(--primary)}
+.brand .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+nav{display:flex;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px;flex-wrap:wrap}
+nav button{border:0;background:transparent;color:var(--muted);padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;transition:.15s}
+nav button.active{background:var(--ink);color:#fff}
+.banner{display:none;background:var(--accent-soft);border:1px solid #e6cfa6;color:#7a4d11;border-radius:var(--radius);padding:10px 14px;margin:16px 0 0;font-size:13.5px}
+.banner.show{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:20px;margin-top:18px}
+.card h2{font-size:17px;margin-bottom:4px}.card .lead{color:var(--muted);font-size:13.5px;margin-bottom:16px}
+label.field{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-bottom:5px}
+textarea,input[type=text],input[type=password],input[type=date],input[type=time],input[type=search],input[type=number],select{width:100%;border:1px solid var(--line-strong);border-radius:var(--radius);padding:9px 11px;background:#fcfbf8;outline:none;transition:.15s}
+textarea:focus,input:focus,select:focus{border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px var(--primary-soft)}
+textarea{resize:vertical;min-height:64px;line-height:1.5}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}@media(max-width:560px){.grid3{grid-template-columns:1fr}}
+.btn{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);padding:9px 16px;border-radius:var(--radius);font-size:14px;font-weight:500;display:inline-flex;align-items:center;gap:7px;transition:.15s}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}.btn.primary:hover{background:#26307a}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}.btn.ghost:hover{color:var(--ink);background:#ece9df}
+.btn.sm{padding:6px 11px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.hint{font-size:12.5px;color:var(--muted)}
+.spinner{width:15px;height:15px;border:2px solid var(--primary-soft);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.av{width:20px;height:20px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.avs{display:inline-flex;align-items:center}.avs .av{margin-left:-5px;border:1.5px solid #fff}.avs .av:first-child{margin-left:0}
+.catdot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;display:inline-block}
+.test-ok{color:var(--done);font-weight:600}.test-bad{color:var(--danger);font-weight:600}
+
+/* toggle chips (people / category / weekdays) */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 2px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#fcfbf8;border:1px solid var(--line-strong);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--ink);user-select:none}
+.chip:hover{border-color:var(--muted)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.on .av{border-color:rgba(255,255,255,.5)}
+.chip.cat.on{color:#fff}
+.wd{min-width:38px;justify-content:center}
+
+/* Today agenda */
+.agenda{margin-top:4px}
+.ag-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.ag-row:last-child{border-bottom:0}
+.ag-row.done .ag-title{color:var(--muted);text-decoration:line-through}
+.ag-row input[type=checkbox]{width:18px;height:18px;flex:0 0 auto;accent-color:var(--done)}
+.ag-time{font-variant-numeric:tabular-nums;font-weight:600;font-size:13px;color:var(--ink);width:96px;flex:0 0 auto}
+.ag-time .small{color:var(--muted);font-weight:500}
+.ag-body{flex:1;min-width:0}
+.ag-title{font-weight:500}
+.ag-meta{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.empty{text-align:center;color:var(--muted);padding:34px 10px}.empty .big{font-size:15px;color:var(--ink);font-weight:500;margin-bottom:4px}
+
+/* Calendar week hour grid */
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cal-range{font-weight:600;margin:12px 0 8px}
+.cal-scroll{overflow-x:auto}
+.cal-hgrid{min-width:760px}
+.cal-colhead{display:grid;grid-template-columns:56px repeat(7,1fr)}
+.cal-colhead .ch{padding:6px 4px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);border-left:1px solid var(--line)}
+.cal-colhead .ch:first-child{border-left:0}
+.cal-colhead .ch.today{color:var(--primary)}
+.cal-colhead .ch .dnum{font-size:15px;color:var(--ink);font-weight:700;display:block;line-height:1.1}
+.cal-colhead .ch.today .dnum{color:var(--primary)}
+.cal-allday{display:grid;grid-template-columns:56px repeat(7,1fr);border-top:1px solid var(--line);background:#fbfaf5}
+.cal-allday .adlabel{font-size:10.5px;color:var(--muted);padding:4px;text-align:right;border-right:1px solid var(--line)}
+.cal-allday .adcell{border-left:1px solid var(--line);padding:3px;min-height:24px;display:flex;flex-direction:column;gap:3px}
+.cal-allday .adcell:first-of-type{border-left:0}
+.ad-item{font-size:10.5px;border-radius:5px;padding:2px 6px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cal-body{display:grid;grid-template-columns:56px repeat(7,1fr);border-top:1px solid var(--line-strong)}
+.cal-axis{position:relative}
+.cal-axis .hl{position:absolute;right:6px;font-size:10.5px;color:var(--muted);transform:translateY(-6px)}
+.cal-col{position:relative;border-left:1px solid var(--line)}
+.cal-col.today{background:rgba(47,58,140,.035)}
+.evt{position:absolute;border-radius:7px;padding:3px 6px;font-size:11px;color:var(--ink);overflow:hidden;cursor:pointer;border-left:3px solid var(--muted);box-shadow:0 1px 2px rgba(0,0,0,.06);line-height:1.25}
+.evt .et{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evt .es{font-size:10px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evt.done{opacity:.5}.evt.done .et{text-decoration:line-through}
+.nowline{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:5}
+.nowline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
+
+/* Events list */
+.toolbar{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;align-items:center}
+.toolbar .search{flex:1;min-width:200px}
+.elist{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden}
+.erow{border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:11px}
+.erow:last-child{border-bottom:0}.erow:hover{background:#faf9f4}
+.erow .ei{flex:1;min-width:0}
+.erow .ename{font-weight:600}
+.erow .emeta{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:2px}
+.erow .eacts{display:flex;gap:6px;flex:0 0 auto}
+
+/* attachments */
+.dropzone{border:1.5px dashed var(--line-strong);border-radius:var(--radius);padding:10px;margin-top:8px;transition:.12s}
+.dropzone.drag{border-color:var(--primary);background:var(--primary-soft)}
+.dz-hint{font-size:12px;color:var(--muted);margin-top:6px}
+.attach-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip-a{display:inline-flex;align-items:center;gap:6px;background:#fcfbf8;border:1px solid var(--line-strong);border-radius:999px;padding:4px 6px 4px 10px;font-size:12.5px;max-width:240px}
+.chip-a .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chip-a button{border:0;background:transparent;color:var(--muted);font-size:15px;line-height:1;padding:0 2px}
+.att-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.att-item{border:1px solid var(--line);border-radius:10px;padding:8px;width:130px;background:#fcfbf8}
+.att-item img{width:100%;height:80px;object-fit:cover;border-radius:6px;display:block}
+.att-item .ic{height:80px;display:flex;align-items:center;justify-content:center;font-size:30px;background:#efedE4;border-radius:6px}
+.att-item .an{font-size:11px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-item .ar{display:flex;gap:6px;margin-top:6px}
+.att-item .ar a,.att-item .ar button{font-size:11px;border:1px solid var(--line-strong);background:#fff;border-radius:6px;padding:2px 7px;color:var(--ink);text-decoration:none;cursor:pointer}
+
+/* AI quick add */
+.qa{background:var(--primary-soft);border:1px solid #cdd3f0;border-radius:var(--radius);padding:12px 14px;margin-bottom:16px}
+.qa .qarow{display:flex;gap:8px;align-items:center}.qa .qarow input{flex:1}
+.qa .qahint{font-size:11.5px;color:#4a4f7a;margin-top:6px}
+
+.set-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:16px}.set-row .grow{flex:1;min-width:200px}
+.note-box{font-size:12.5px;color:var(--muted);background:#fcfbf8;border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;margin-top:8px;line-height:1.6}
+.catedit{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.catedit input[type=text]{flex:1}.catedit input[type=color]{width:42px;height:34px;padding:2px;border-radius:8px;border:1px solid var(--line-strong);background:#fff}
+.person{display:inline-flex;align-items:center;gap:7px;background:#fcfbf8;border:1px solid var(--line-strong);border-radius:999px;padding:4px 6px 4px 4px}
+.person button{border:0;background:transparent;color:var(--muted);font-size:15px;line-height:1;padding:0 2px}
+.people{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.prov.hidden,.hidden{display:none!important}
+.sync-badge{margin-left:8px;font-size:11.5px}
+.sync-badge.ok{color:var(--done)}.sync-badge.err{color:var(--danger)}.sync-badge.busy,.sync-badge.off{color:var(--muted)}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(20,20,30,.4);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal-bg.show{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);max-width:420px;width:100%;padding:20px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.modal h3{font-size:17px;display:flex;align-items:center;gap:8px}
+.modal .mmeta{font-size:13px;color:var(--muted);margin:10px 0;line-height:1.7}
+.modal .macts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:90%}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* print this week */
+.print-only{display:none}
+@media print{
+  @page{size:landscape;margin:8mm}
+  header,nav,.banner,#toast,.modal-bg,.cal-head .row,.btn{display:none!important}
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  section[id^="tab-"]{display:none!important}
+  #tab-calendar{display:block!important}
+  .card{border:0;padding:0;margin:0}
+  .cal-scroll{overflow:visible}
+  .cal-hgrid{min-width:0}
+  .print-only{display:block}
+  .print-head{font-size:15px;font-weight:700;margin-bottom:4px}
+  .print-legend{font-size:10.5px;color:#555;margin-top:8px;display:flex;gap:14px;flex-wrap:wrap}
+  .print-legend span{display:inline-flex;align-items:center;gap:5px}
+  .evt{box-shadow:none}
+  .nowline{display:none}
+}
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand"><div class="mark"><b>别忘了</b></div><div class="sub">家庭日历 · 一周时段一眼看清<span id="sync-badge" class="sync-badge off"></span></div></div>
+  <nav>
+    <button data-tab="today" class="active">今天</button>
+    <button data-tab="calendar">日历</button>
+    <button data-tab="events">事件</button>
+    <button data-tab="new">新建</button>
+    <button data-tab="settings">设置</button>
+  </nav>
+</div></header>
+
+<div class="wrap">
+  <div id="ls-banner" class="banner"></div>
+
+  <section id="tab-today">
+    <div class="card">
+      <h2 id="today-title">今天</h2>
+      <div class="lead">今天的日程,按时间先后排列。勾掉做完的,把这一天扫光。</div>
+      <div class="agenda" id="agenda"></div>
+    </div>
+  </section>
+
+  <section id="tab-calendar" class="hidden">
+    <div class="card">
+      <div class="cal-head"><h2>本周日历</h2>
+        <div class="row" style="gap:6px">
+          <button class="btn sm" id="cal-prev">‹ 上周</button>
+          <button class="btn sm" id="cal-today">本周</button>
+          <button class="btn sm" id="cal-next">下周 ›</button>
+          <button class="btn sm" id="cal-print">🖨 打印本周</button>
+        </div>
+      </div>
+      <div class="print-only print-head" id="print-head"></div>
+      <div class="cal-range" id="cal-range"></div>
+      <div class="cal-scroll"><div class="cal-hgrid" id="cal-hgrid"></div></div>
+      <div class="print-only print-legend" id="print-legend"></div>
+    </div>
+  </section>
+
+  <section id="tab-events" class="hidden">
+    <div class="toolbar">
+      <input type="search" class="search" id="ev-search" placeholder="搜索标题、地点、参与人、备注…">
+      <button class="btn" id="ev-new">+ 新建事件</button>
+    </div>
+    <div id="ev-list"></div>
+  </section>
+
+  <section id="tab-new" class="hidden">
+    <div class="card">
+      <h2 id="form-title">新建事件</h2>
+      <div class="lead">一个事件 = 日期 + 时段 + 参与人 + 分类。重复活动(如每周钢琴课)设好"每周",以后自动出现。</div>
+
+      <div class="qa">
+        <div class="qarow">
+          <input type="text" id="qa-text" placeholder="用一句话描述,如:周三孩子钢琴课 下午四点到五点">
+          <button class="btn primary sm" id="qa-go">✨ 智能填入</button>
+        </div>
+        <div class="qahint">交给本地 AI 解析成下面的表单,填好后你再核对保存。需在「设置」里配置 AI。</div>
+        <div id="qa-status" class="hint" style="margin-top:6px"></div>
+      </div>
+
+      <label class="field" for="f-title">标题 *</label>
+      <input type="text" id="f-title" placeholder="如:孩子钢琴课">
+
+      <div class="grid2" style="margin-top:12px">
+        <div><label class="field" for="f-date">日期 *</label><input type="date" id="f-date"></div>
+        <div><label class="field">时段</label>
+          <div class="row" style="gap:8px;align-items:center">
+            <label class="chip" style="cursor:pointer"><input type="checkbox" id="f-allday" style="width:15px;height:15px;margin-right:5px">全天</label>
+            <input type="time" id="f-start" step="900" style="width:auto;flex:1">
+            <span class="hint">至</span>
+            <input type="time" id="f-end" step="900" style="width:auto;flex:1">
+          </div>
+        </div>
+      </div>
+
+      <label class="field" style="margin-top:14px">参与人</label>
+      <div class="chips" id="f-people"></div>
+
+      <label class="field" style="margin-top:10px">分类</label>
+      <div class="chips" id="f-cat"></div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div><label class="field" for="f-loc">地点(可选)</label><input type="text" id="f-loc" placeholder="如:少年宫 / 家里"></div>
+        <div><label class="field" for="f-remind">提醒</label>
+          <select id="f-remind">
+            <option value="">用默认</option>
+            <option value="0">事件开始时</option>
+            <option value="5">提前 5 分钟</option>
+            <option value="15">提前 15 分钟</option>
+            <option value="30">提前 30 分钟</option>
+            <option value="60">提前 1 小时</option>
+            <option value="-1">不提醒</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="field" style="margin-top:14px">重复</label>
+      <div class="row" style="gap:14px">
+        <label class="chip" style="cursor:pointer"><input type="radio" name="rep" value="none" checked style="margin-right:6px">不重复</label>
+        <label class="chip" style="cursor:pointer"><input type="radio" name="rep" value="weekly" style="margin-right:6px">每周</label>
+      </div>
+      <div id="rep-detail" class="hidden" style="margin-top:10px">
+        <div class="row" style="gap:10px;align-items:center">
+          <span class="hint">每</span>
+          <input type="number" id="rep-interval" min="1" max="12" value="1" style="width:64px">
+          <span class="hint">周,在这些天:</span>
+        </div>
+        <div class="chips" id="rep-wd" style="margin-top:8px"></div>
+        <div class="row" style="gap:10px;align-items:center;margin-top:8px">
+          <span class="hint">结束于(留空=长期)</span>
+          <input type="date" id="rep-until" style="width:auto">
+        </div>
+      </div>
+
+      <label class="field" style="margin-top:14px" for="f-notes">备注(可选)</label>
+      <textarea id="f-notes" placeholder="任何提醒事项…"></textarea>
+
+      <div class="dropzone" id="dropzone">
+        <div class="attach-chips" id="attach-chips"></div>
+        <div class="dz-hint">📎 拖入文件、截图,或拖一封 Outlook 邮件 — 也可直接粘贴截图。原样保存,随时重新打开(不会被解析)。</div>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="save-event">保存事件</button>
+        <button class="btn ghost" id="clear-form">清空</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-settings" class="hidden">
+    <div class="card">
+      <h2>家人</h2><div class="lead">可指派的参与人,随时增删。</div>
+      <div class="people" id="people-list"></div>
+      <div class="set-row" style="margin:0"><div class="grow"><input type="text" id="new-person" placeholder="输入名字回车添加"></div><button class="btn" id="add-person">添加</button></div>
+    </div>
+
+    <div class="card">
+      <h2>分类</h2><div class="lead">事件块按分类着色。点色块改颜色。</div>
+      <div id="cat-list"></div>
+      <div class="set-row" style="margin:8px 0 0"><div class="grow"><input type="text" id="new-cat" placeholder="新分类名,回车添加"></div><button class="btn" id="add-cat">添加</button></div>
+    </div>
+
+    <div class="card">
+      <h2>显示与提醒</h2>
+      <div class="set-row">
+        <div><label class="field" for="set-start">每天最早显示</label>
+          <select id="set-start"></select></div>
+        <div><label class="field" for="set-end">最晚显示</label>
+          <select id="set-end"></select></div>
+        <div><label class="field" for="set-lead">默认提醒</label>
+          <select id="set-lead">
+            <option value="0">事件开始时</option><option value="5">提前 5 分钟</option>
+            <option value="15">提前 15 分钟</option><option value="30">提前 30 分钟</option>
+            <option value="60">提前 1 小时</option><option value="-1">不提醒</option>
+          </select></div>
+        <div><label class="field">桌面提醒(App 开着时)</label><button class="btn sm" id="notify-btn">开启桌面提醒</button></div>
+      </div>
+      <button class="btn primary" id="save-settings">保存设置</button>
+    </div>
+
+    <div class="card">
+      <h2>云同步(Cloudflare)</h2>
+      <div class="lead">手机、电脑、家人共用同一份日历。数据先存在本机,再在后台同步;没网也能用。AI 密钥和附件不会同步。</div>
+      <label class="field" for="sy-url">同步服务地址</label>
+      <input type="text" id="sy-url" placeholder="https://dontforget-sync.你的子域.workers.dev" autocomplete="off">
+      <label class="field" for="sy-pw" style="margin-top:10px">家庭密码</label>
+      <input type="password" id="sy-pw" placeholder="部署时设置的 FAMILY_PASSWORD" autocomplete="off">
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="sy-save">保存并同步</button>
+        <button class="btn" id="sy-now">立即同步</button>
+        <button class="btn ghost" id="sy-off">断开</button>
+      </div>
+      <div id="sy-status" class="hint" style="margin-top:8px"></div>
+      <div id="sy-ics" class="note-box hidden"></div>
+    </div>
+
+    <div class="card">
+      <h2>AI — 可选</h2>
+      <div class="lead">只用于「智能填入」(把一句话变成事件)。密钥只存在本机这个文件里,导出数据时不包含。</div>
+      <label class="field" for="set-provider">来源</label>
+      <select id="set-provider">
+        <option value="local">本地 — LM Studio(离线)</option>
+        <option value="claude">Claude — Anthropic 密钥</option>
+        <option value="gemini">Gemini — Google 密钥</option>
+      </select>
+      <div id="prov-local" class="prov" style="margin-top:12px">
+        <label class="field" for="l-baseurl">服务地址(Base URL)</label>
+        <div class="set-row"><div class="grow"><input type="text" id="l-baseurl" placeholder="http://localhost:1234/v1"></div></div>
+        <label class="field" for="l-key">密钥(本地通常留空)</label>
+        <div class="set-row" style="margin-bottom:0"><div class="grow"><input type="password" id="l-key" placeholder="除非在 LM Studio 里设过,否则留空"></div></div>
+      </div>
+      <div id="prov-claude" class="prov hidden" style="margin-top:12px">
+        <label class="field" for="c-key">Anthropic 密钥</label>
+        <div class="set-row" style="margin-bottom:0"><div class="grow"><input type="password" id="c-key" placeholder="sk-ant-..."></div></div>
+      </div>
+      <div id="prov-gemini" class="prov hidden" style="margin-top:12px">
+        <label class="field" for="g-key">Google Gemini 密钥</label>
+        <div class="set-row" style="margin-bottom:0"><div class="grow"><input type="password" id="g-key" placeholder="AIza..."></div></div>
+      </div>
+      <div class="set-row" style="margin-top:12px">
+        <div class="grow"><label class="field" for="set-model">模型</label>
+          <input type="text" id="set-model" list="model-list" placeholder="模型名"><datalist id="model-list"></datalist></div>
+        <button class="btn" id="refresh-models">刷新模型</button>
+        <button class="btn" id="test-btn">测试连接</button>
+      </div>
+      <div id="test-result" class="hint"></div>
+      <div class="note-box"><b>本地(LM Studio):</b>Developer 页 → 加载模型 → Start Server → <b>开启 CORS</b>,保留 <code>/v1</code>。<br><b>Claude / Gemini:</b>粘贴密钥 → 刷新模型 → 选一个。从 <code>file://</code> 直连云端 API 可能遇到 CORS;若测试失败,用 <code>python -m http.server</code> 以 http 方式打开。</div>
+    </div>
+
+    <div class="card">
+      <h2>数据</h2>
+      <div class="row">
+        <button class="btn" id="export-data">导出数据(JSON,不含密钥)</button>
+        <button class="btn" id="import-data">导入数据</button>
+        <input type="file" id="import-input" accept="application/json" class="hidden">
+        <button class="btn" id="export-ics">导出全部到日历(.ics)</button>
+        <button class="btn ghost" id="clear-data" style="color:var(--danger)">清空全部</button>
+      </div>
+      <div class="note-box">导出从不包含 AI 密钥;导入也不会抹掉你已设的密钥。附件存在本浏览器里(IndexedDB),不在 JSON 导出中。重复事件导出为标准日历系列(RRULE),Outlook 可直接当一个系列导入。</div>
+    </div>
+  </section>
+</div>
+
+<div class="modal-bg" id="evmodal"><div class="modal" id="evmodal-inner"></div></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+const STORE_KEY="dontforget_app_v1";
+const DEFAULT_PEOPLE=["Ben","Sophie","Cindy","Young"];
+const DEFAULT_CATS=[
+  {id:"sport",name:"体育",color:"#2f7dc1"},
+  {id:"arts",name:"文艺",color:"#7c4dff"},
+  {id:"finance",name:"理财",color:"#c1741f"},
+  {id:"garden",name:"园艺",color:"#3f9142"},
+  {id:"food",name:"美食",color:"#d2553b"}
+];
+const DEFAULTS={version:1,settings:{
+  provider:"local",local:{baseUrl:"http://localhost:1234/v1",key:"",model:""},
+  claude:{apiKey:"",model:"claude-sonnet-4-6"},gemini:{apiKey:"",model:"gemini-2.5-flash"},
+  people:DEFAULT_PEOPLE.slice(),categories:JSON.parse(JSON.stringify(DEFAULT_CATS)),
+  dayStart:7,dayEnd:21,reminderLead:30,notify:false
+},events:[]};
+
+/* ---------- utils ---------- */
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function pad(n){return String(n).padStart(2,"0");}
+function isoOf(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function todayStr(){return isoOf(new Date());}
+function parseISO(s){const a=String(s).split("-").map(Number);return new Date(a[0],(a[1]||1)-1,a[2]||1);}
+function fmtDate(s){if(!s)return"";const a=String(s).split("-");return a.length===3?(a[1]+"月"+a[2]+"日"):s;}
+function toMin(t){if(!t)return 0;const a=t.split(":").map(Number);return a[0]*60+(a[1]||0);}
+function minToTime(m){return pad(Math.floor(m/60))+":"+pad(m%60);}
+function mondayOf(d){const x=new Date(d);x.setHours(0,0,0,0);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x;}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function hexA(hex,a){hex=(hex||"#888").replace("#","");if(hex.length===3)hex=hex.split("").map(c=>c+c).join("");const n=parseInt(hex,16);return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")";}
+const WD_CN=["日","一","二","三","四","五","六"]; // index = JS getDay (0=Sun)
+const MON_ORDER=[1,2,3,4,5,6,0]; // Monday-first list of JS day numbers
+const ICS_DAY=["SU","MO","TU","WE","TH","FR","SA"]; // index = JS getDay
+const $=s=>document.querySelector(s);const $$=s=>document.querySelectorAll(s);
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove("show"),2600);}
+function escapeHtml(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ---------- storage ---------- */
+let memStore=null,lsOK=true;
+try{localStorage.setItem("__t","1");localStorage.removeItem("__t");}catch(e){lsOK=false;}
+function rawGet(k){try{return lsOK?localStorage.getItem(k):(memStore?memStore[k]:null);}catch(e){return null;}}
+function normSettings(s){s=s||{};const L=s.local||{},C=s.claude||{},G=s.gemini||{};
+  return{provider:s.provider||"local",
+    local:{baseUrl:L.baseUrl||"http://localhost:1234/v1",key:L.key||"",model:L.model||""},
+    claude:{apiKey:C.apiKey||"",model:C.model||"claude-sonnet-4-6"},
+    gemini:{apiKey:G.apiKey||"",model:G.model||"gemini-2.5-flash"},
+    people:(Array.isArray(s.people)&&s.people.length)?s.people.slice():DEFAULT_PEOPLE.slice(),
+    categories:(Array.isArray(s.categories)&&s.categories.length)?s.categories:JSON.parse(JSON.stringify(DEFAULT_CATS)),
+    dayStart:typeof s.dayStart==="number"?s.dayStart:7,
+    dayEnd:typeof s.dayEnd==="number"?s.dayEnd:21,
+    reminderLead:typeof s.reminderLead==="number"?s.reminderLead:30,
+    notify:!!s.notify};}
+function normEvents(arr){return (Array.isArray(arr)?arr:[]).map(e=>{e=e||{};
+  return{id:e.id||uid(),title:e.title||"未命名",date:e.date||todayStr(),
+    allDay:!!e.allDay,start:e.start||"09:00",end:e.end||"10:00",
+    people:Array.isArray(e.people)?e.people:[],category:e.category||"",
+    location:e.location||"",notes:e.notes||"",reminderLead:(e.reminderLead===null||e.reminderLead===undefined)?null:+e.reminderLead,
+    recurrence:e.recurrence&&e.recurrence.freq==="weekly"?{freq:"weekly",interval:e.recurrence.interval||1,byday:Array.isArray(e.recurrence.byday)?e.recurrence.byday:[],until:e.recurrence.until||null}:null,
+    skip:Array.isArray(e.skip)?e.skip:[],done:Array.isArray(e.done)?e.done:[],
+    attCount:e.attCount||0,createdAt:e.createdAt||Date.now(),seq:e.seq||0,updatedAt:e.updatedAt||e.createdAt||0};});}
+function loadState(){const raw=rawGet(STORE_KEY);
+  if(raw){try{const o=JSON.parse(raw);return{version:1,settings:normSettings(o.settings),events:normEvents(o.events)};}catch(e){}}
+  return JSON.parse(JSON.stringify(DEFAULTS));}
+function saveState(){try{if(lsOK){localStorage.setItem(STORE_KEY,JSON.stringify(state));return;}}catch(e){}memStore=memStore||{};memStore[STORE_KEY]=JSON.stringify(state);}
+let state=loadState();saveState();
+if(!lsOK&&typeof document!=="undefined"){const b=$("#ls-banner");if(b){b.classList.add("show");b.textContent="提示:当前环境无法持久保存(数据只在本次有效)。请把文件下载下来,直接用浏览器打开即可正常保存。";}}
+
+/* ---------- attachments (IndexedDB) ---------- */
+let _db=null;
+function idbReady(){return ("indexedDB"in (typeof window!=="undefined"?window:{}))&&(typeof indexedDB!=="undefined");}
+function idb(){return new Promise((res,rej)=>{if(_db)return res(_db);if(!idbReady())return rej(new Error("no-idb"));
+  const r=indexedDB.open("dontforget_files",1);
+  r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains("files")){const os=db.createObjectStore("files",{keyPath:"id"});os.createIndex("eventId","eventId",{unique:false});}};
+  r.onsuccess=()=>{_db=r.result;res(_db);};r.onerror=()=>rej(r.error);});}
+function idbPut(rec){return idb().then(db=>new Promise((res,rej)=>{const tx=db.transaction("files","readwrite");tx.objectStore("files").put(rec);tx.oncomplete=()=>res(rec);tx.onerror=()=>rej(tx.error);}));}
+function idbByEvent(eventId){return idb().then(db=>new Promise((res,rej)=>{const tx=db.transaction("files","readonly");const out=[];const cur=tx.objectStore("files").index("eventId").openCursor(IDBKeyRange.only(eventId));
+  cur.onsuccess=e=>{const c=e.target.result;if(c){out.push(c.value);c.continue();}else res(out);};cur.onerror=()=>rej(cur.error);}));}
+function idbDelete(id){return idb().then(db=>new Promise((res,rej)=>{const tx=db.transaction("files","readwrite");tx.objectStore("files").delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);}));}
+function idbDeleteByEvent(eventId){return idbByEvent(eventId).then(list=>Promise.all(list.map(r=>idbDelete(r.id)))).catch(()=>{});}
+function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]||"");r.onerror=()=>rej(r.error);r.readAsDataURL(file);});}
+
+/* ---------- occurrence engine ---------- */
+function occursOn(ev,iso){
+  if(ev.skip&&ev.skip.indexOf(iso)>=0)return false;
+  if(!ev.recurrence){return ev.date===iso;}
+  if(iso<ev.date)return false;
+  const r=ev.recurrence;
+  if(r.until&&iso>r.until)return false;
+  const d=parseISO(iso);
+  if((r.byday||[]).indexOf(d.getDay())<0)return false;
+  const interval=r.interval||1;
+  const weeks=Math.round((mondayOf(d).getTime()-mondayOf(parseISO(ev.date)).getTime())/(7*86400000));
+  return weeks>=0&&(weeks%interval===0);
+}
+function isDone(ev,iso){return (ev.done||[]).indexOf(iso)>=0;}
+function toggleDone(ev,iso){const i=(ev.done||[]).indexOf(iso);if(i>=0)ev.done.splice(i,1);else{ev.done=ev.done||[];ev.done.push(iso);}}
+// occurrences on a single day (across all events)
+function occurrencesOn(iso){const out=[];(state.events||[]).forEach(ev=>{if(occursOn(ev,iso))
+  out.push({ev,date:iso,allDay:ev.allDay,start:ev.start,end:ev.end,startMin:toMin(ev.start),endMin:toMin(ev.end),done:isDone(ev,iso)});});return out;}
+
+/* ---------- overlap layout ---------- */
+function layoutDay(occs){
+  const evs=occs.map(o=>Object.assign({},o)).sort((a,b)=>a.startMin-b.startMin||a.endMin-b.endMin);
+  const groups=[];let cur=[],curEnd=-1;
+  evs.forEach(e=>{if(cur.length&&e.startMin>=curEnd){groups.push(cur);cur=[];curEnd=-1;}cur.push(e);curEnd=Math.max(curEnd,e.endMin);});
+  if(cur.length)groups.push(cur);
+  groups.forEach(g=>{const cols=[];g.forEach(e=>{let placed=false;
+    for(let i=0;i<cols.length;i++){if(cols[i]<=e.startMin){e.col=i;cols[i]=e.endMin;placed=true;break;}}
+    if(!placed){e.col=cols.length;cols.push(e.endMin);}});
+    g.forEach(e=>e.cols=cols.length);});
+  return evs;
+}
+
+/* ---------- people / category helpers ---------- */
+function personColor(n){let h=0;for(let i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%360;return "hsl("+h+",52%,42%)";}
+function av(n){return '<span class="av" style="background:'+personColor(n)+'">'+escapeHtml((n||"?").charAt(0).toUpperCase())+'</span>';}
+function avStack(arr){if(!arr||!arr.length)return"";return '<span class="avs">'+arr.map(av).join("")+'</span>';}
+function catById(id){return (state.settings.categories||[]).find(c=>c.id===id)||null;}
+function catColor(id){const c=catById(id);return c?c.color:"#9a9aa8";}
+function catName(id){const c=catById(id);return c?c.name:"";}
+
+/* ---------- tabs ---------- */
+let currentTab="today";
+function goTab(name){currentTab=name;$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
+  ["today","calendar","events","new","settings"].forEach(t=>$("#tab-"+t).classList.toggle("hidden",t!==name));
+  if(name==="today")renderAgenda();if(name==="calendar")renderCalendar();if(name==="events")renderEvents();if(name==="settings")fillSettings();}
+if(typeof document!=="undefined")$$("nav button").forEach(b=>b.addEventListener("click",()=>goTab(b.dataset.tab)));
+
+/* ---------- Today agenda ---------- */
+function renderAgenda(){const el=$("#agenda");if(!el)return;const iso=todayStr();
+  const d=new Date();$("#today-title").textContent="今天 · "+(d.getMonth()+1)+"月"+d.getDate()+"日 周"+WD_CN[d.getDay()];
+  const occs=occurrencesOn(iso).sort((a,b)=>(a.allDay?-1:0)-(b.allDay?-1:0)||a.startMin-b.startMin);
+  if(!occs.length){el.innerHTML='<div class="empty"><div class="big">今天没有安排</div>去「新建」加一个,或在「日历」里看整周。</div>';return;}
+  el.innerHTML="";occs.forEach(o=>{const row=document.createElement("div");row.className="ag-row"+(o.done?" done":"");
+    const time=o.allDay?'<div class="ag-time">全天</div>':'<div class="ag-time">'+o.start+' <span class="small">– '+o.end+'</span></div>';
+    const cat=o.ev.category?'<span class="catdot" style="background:'+catColor(o.ev.category)+'"></span>'+escapeHtml(catName(o.ev.category)):'';
+    const ppl=o.ev.people&&o.ev.people.length?avStack(o.ev.people):'';
+    const loc=o.ev.location?'📍 '+escapeHtml(o.ev.location):'';
+    row.innerHTML='<input type="checkbox" '+(o.done?"checked":"")+'>'+time
+      +'<div class="ag-body"><div class="ag-title">'+escapeHtml(o.ev.title)+'</div>'
+      +'<div class="ag-meta">'+[cat,loc].filter(Boolean).join(" · ")+(ppl?' '+ppl:'')+'</div></div>';
+    row.querySelector("input").onchange=()=>{toggleDone(o.ev,iso);touch(o.ev);saveState();renderAgenda();};
+    el.appendChild(row);});}
+
+/* ---------- Calendar week hour grid ---------- */
+let calStart=mondayOf(new Date());
+function weekRange(){const days=[];for(let i=0;i<7;i++)days.push(addDays(calStart,i));return days;}
+function renderCalendar(){const host=$("#cal-hgrid");if(!host)return;const S=state.settings;
+  const days=weekRange();const todayIso=todayStr();
+  // gather occurrences per day
+  const perDay=days.map(d=>occurrencesOn(isoOf(d)));
+  // auto-expand visible range to fit any timed event outside default window
+  let lo=S.dayStart,hi=S.dayEnd;
+  perDay.forEach(list=>list.forEach(o=>{if(!o.allDay){lo=Math.min(lo,Math.floor(o.startMin/60));hi=Math.max(hi,Math.ceil(o.endMin/60));}}));
+  lo=Math.max(0,Math.min(lo,S.dayStart));hi=Math.min(24,Math.max(hi,S.dayEnd));
+  const hourPx=parseInt(getComputedStyle(document.documentElement).getPropertyValue("--hour"))||44;
+  const gridH=(hi-lo)*hourPx;
+  const e=days[6];
+  $("#cal-range").textContent=(calStart.getMonth()+1)+"月"+calStart.getDate()+"日 – "+(e.getMonth()+1)+"月"+e.getDate()+"日,"+e.getFullYear();
+  if($("#print-head"))$("#print-head").textContent="本周日历 · "+(calStart.getMonth()+1)+"月"+calStart.getDate()+"日 – "+(e.getMonth()+1)+"月"+e.getDate()+"日";
+  // column headers
+  let head='<div class="ch"></div>';
+  days.forEach((d,i)=>{const t=isoOf(d)===todayIso;head+='<div class="ch'+(t?" today":"")+'">周'+WD_CN[d.getDay()]+'<span class="dnum">'+d.getDate()+'</span></div>';});
+  // all-day row
+  let allday='<div class="adlabel">全天</div>';
+  days.forEach((d,di)=>{const iso=isoOf(d);const items=perDay[di].filter(o=>o.allDay);
+    let c='<div class="adcell">';items.forEach(o=>{c+='<div class="ad-item" style="background:'+catColor(o.ev.category)+(o.done?";opacity:.5":"")+'" data-eid="'+o.ev.id+'" data-d="'+iso+'">'+escapeHtml(o.ev.title)+'</div>';});c+='</div>';allday+=c;});
+  // body: axis + 7 columns
+  let axis='<div class="cal-axis" style="height:'+gridH+'px">';
+  for(let h=lo;h<=hi;h++)axis+='<div class="hl" style="top:'+((h-lo)*hourPx)+'px">'+pad(h)+':00</div>';
+  axis+='</div>';
+  let cols="";
+  const nowMin=new Date().getHours()*60+new Date().getMinutes();
+  days.forEach((d,di)=>{const iso=isoOf(d);const t=iso===todayIso;
+    const timed=layoutDay(perDay[di].filter(o=>!o.allDay));
+    let col='<div class="cal-col'+(t?" today":"")+'" style="height:'+gridH+'px;background-image:repeating-linear-gradient(to bottom,var(--line) 0,var(--line) 1px,transparent 1px,transparent '+hourPx+'px);background-position:0 0">';
+    timed.forEach(o=>{const top=(o.startMin-lo*60)/60*hourPx;const h=Math.max(20,(o.endMin-o.startMin)/60*hourPx);
+      const w=100/o.cols;const left=o.col*w;const col0=catColor(o.ev.category);
+      col+='<div class="evt'+(o.done?" done":"")+'" style="top:'+top+'px;height:'+h+'px;left:calc('+left+'% + 1px);width:calc('+w+'% - 3px);background:'+hexA(col0,.16)+';border-left-color:'+col0+'" data-eid="'+o.ev.id+'" data-d="'+iso+'">'
+        +'<div class="et">'+escapeHtml(o.ev.title)+'</div><div class="es">'+o.start+'–'+o.end+(o.ev.location?' · '+escapeHtml(o.ev.location):'')+'</div></div>';});
+    if(t&&nowMin>=lo*60&&nowMin<=hi*60)col+='<div class="nowline" style="top:'+((nowMin-lo*60)/60*hourPx)+'px"></div>';
+    col+='</div>';cols+=col;});
+  host.innerHTML='<div class="cal-colhead">'+head+'</div><div class="cal-allday">'+allday+'</div><div class="cal-body">'+axis+cols+'</div>';
+  host.querySelectorAll("[data-eid]").forEach(el=>el.onclick=()=>openEvent(el.dataset.eid,el.dataset.d));
+  // print legend
+  if($("#print-legend")){let lg="";(state.settings.categories||[]).forEach(c=>lg+='<span><span class="catdot" style="background:'+c.color+'"></span>'+escapeHtml(c.name)+'</span>');$("#print-legend").innerHTML=lg;}
+}
+if(typeof document!=="undefined"){
+  $("#cal-prev").onclick=()=>{calStart=addDays(calStart,-7);renderCalendar();};
+  $("#cal-next").onclick=()=>{calStart=addDays(calStart,7);renderCalendar();};
+  $("#cal-today").onclick=()=>{calStart=mondayOf(new Date());renderCalendar();};
+  $("#cal-print").onclick=()=>{renderCalendar();setTimeout(()=>window.print(),60);};
+}
+
+/* ---------- event modal ---------- */
+function openEvent(eid,iso){const ev=(state.events||[]).find(x=>x.id===eid);if(!ev)return;
+  const done=isDone(ev,iso);const cat=ev.category?'<span class="catdot" style="background:'+catColor(ev.category)+'"></span> '+escapeHtml(catName(ev.category)):'(无分类)';
+  const rep=ev.recurrence?('每'+(ev.recurrence.interval>1?ev.recurrence.interval+'周':'周')+' '+ev.recurrence.byday.slice().sort().map(x=>'周'+WD_CN[x]).join("、")+(ev.recurrence.until?(' 至 '+fmtDate(ev.recurrence.until)):'')):'不重复';
+  const inner=$("#evmodal-inner");
+  inner.innerHTML='<h3>'+escapeHtml(ev.title)+'</h3>'
+    +'<div class="mmeta">'+fmtDate(iso)+' 周'+WD_CN[parseISO(iso).getDay()]+' · '+(ev.allDay?'全天':escapeHtml(ev.start)+'–'+escapeHtml(ev.end))+'<br>'
+    +cat+'<br>'+(ev.people&&ev.people.length?('参与:'+ev.people.map(escapeHtml).join("、")+'<br>'):'')
+    +(ev.location?('📍 '+escapeHtml(ev.location)+'<br>'):'')+'重复:'+escapeHtml(rep)
+    +(ev.notes?('<br><br>'+escapeHtml(ev.notes)):'')+'</div>'
+    +'<div class="macts">'
+    +'<button class="btn primary sm" id="m-done">'+(done?"撤销完成":"✓ 标记完成")+'</button>'
+    +'<button class="btn sm" id="m-edit">编辑</button>'
+    +'<button class="btn sm" id="m-ics">导出 .ics</button>'
+    +(ev.recurrence?'<button class="btn ghost sm" id="m-skip">取消本次</button>':'')
+    +'<button class="btn ghost sm" id="m-del" style="color:var(--danger)">删除'+(ev.recurrence?'整个系列':'')+'</button>'
+    +'<button class="btn ghost sm" id="m-close">关闭</button></div>';
+  $("#evmodal").classList.add("show");
+  $("#m-close").onclick=closeModal;
+  $("#m-done").onclick=()=>{toggleDone(ev,iso);touch(ev);saveState();closeModal();refreshViews();};
+  $("#m-edit").onclick=()=>{closeModal();loadForm(ev);};
+  $("#m-ics").onclick=()=>{exportICS([ev]);};
+  if(ev.recurrence)$("#m-skip").onclick=()=>{if(ev.skip.indexOf(iso)<0)ev.skip.push(iso);touch(ev);saveState();closeModal();refreshViews();toast("已取消本次("+fmtDate(iso)+")");};
+  $("#m-del").onclick=()=>{if(confirm("删除"+(ev.recurrence?"整个系列":"")+":"+ev.title+"?")){idbDeleteByEvent(ev.id);state.events=state.events.filter(x=>x.id!==ev.id);Sync.markDeleted(ev.id,ev.updatedAt);saveState();closeModal();refreshViews();toast("已删除");}};
+}
+function closeModal(){const m=$("#evmodal");if(m)m.classList.remove("show");}
+if(typeof document!=="undefined")$("#evmodal").addEventListener("click",e=>{if(e.target.id==="evmodal")closeModal();});
+
+/* ---------- Events list ---------- */
+function repSummary(ev){if(!ev.recurrence)return"";const r=ev.recurrence;return '每'+(r.interval>1?r.interval+'周':'周')+' '+r.byday.slice().sort().map(x=>WD_CN[x]).join("");}
+function renderEvents(){const wrap=$("#ev-list");if(!wrap)return;const q=(($("#ev-search").value)||"").trim().toLowerCase();
+  let list=(state.events||[]).slice();
+  if(q)list=list.filter(ev=>[ev.title,ev.location,ev.notes,catName(ev.category)].concat(ev.people||[]).join(" ").toLowerCase().indexOf(q)>=0);
+  list.sort((a,b)=>{const ar=a.recurrence?0:1,br=b.recurrence?0:1;return ar-br||String(a.date+a.start).localeCompare(String(b.date+b.start));});
+  if(!(state.events||[]).length){wrap.innerHTML='<div class="card"><div class="empty"><div class="big">还没有事件</div>去「新建」加第一个。</div></div>';return;}
+  if(!list.length){wrap.innerHTML='<div class="card"><div class="empty">没有匹配的事件。</div></div>';return;}
+  const box=document.createElement("div");box.className="elist";
+  list.forEach(ev=>{const row=document.createElement("div");row.className="erow";
+    const when=ev.recurrence?('🔁 '+repSummary(ev)+' '+(ev.allDay?'全天':ev.start+'–'+ev.end)):(fmtDate(ev.date)+' '+(ev.allDay?'全天':ev.start+'–'+ev.end));
+    const cat=ev.category?'<span class="catdot" style="background:'+catColor(ev.category)+'"></span>'+escapeHtml(catName(ev.category)):'';
+    row.innerHTML='<div class="ei"><div class="ename">'+escapeHtml(ev.title)+'</div>'
+      +'<div class="emeta">'+when+(cat?' · '+cat:'')+(ev.location?' · 📍'+escapeHtml(ev.location):'')+(ev.people&&ev.people.length?' ':'')+avStack(ev.people)+(ev.attCount?' · 📎'+ev.attCount:'')+'</div></div>'
+      +'<div class="eacts"><button class="btn sm" data-act="edit">编辑</button><button class="btn ghost sm" data-act="del" style="color:var(--danger)">删除</button></div>';
+    row.querySelector('[data-act=edit]').onclick=()=>loadForm(ev);
+    row.querySelector('[data-act=del]').onclick=()=>{if(confirm("删除"+(ev.recurrence?"整个系列":"")+":"+ev.title+"?")){idbDeleteByEvent(ev.id);state.events=state.events.filter(x=>x.id!==ev.id);Sync.markDeleted(ev.id,ev.updatedAt);saveState();refreshViews();}};
+    box.appendChild(row);});
+  wrap.innerHTML="";wrap.appendChild(box);}
+if(typeof document!=="undefined"){$("#ev-search")&&$("#ev-search").addEventListener("input",renderEvents);$("#ev-new")&&($("#ev-new").onclick=()=>{blankForm();goTab("new");});}
+
+/* ---------- New / Edit form ---------- */
+let editingId=null,formAttachments=[];
+function renderPeopleChips(sel){const el=$("#f-people");el.innerHTML="";(state.settings.people||[]).forEach(p=>{const on=sel.indexOf(p)>=0;
+  const c=document.createElement("span");c.className="chip"+(on?" on":"");c.innerHTML=av(p)+escapeHtml(p);c.dataset.p=p;
+  c.onclick=()=>{c.classList.toggle("on");};el.appendChild(c);});}
+function selectedPeople(){return [...$("#f-people").querySelectorAll(".chip.on")].map(c=>c.dataset.p);}
+function renderCatChips(sel){const el=$("#f-cat");el.innerHTML="";(state.settings.categories||[]).forEach(c=>{const on=sel===c.id;
+  const ch=document.createElement("span");ch.className="chip cat"+(on?" on":"");ch.dataset.c=c.id;
+  ch.style.borderColor=c.color;if(on)ch.style.background=c.color;
+  ch.innerHTML='<span class="catdot" style="background:'+(on?"#fff":c.color)+'"></span>'+escapeHtml(c.name);
+  ch.onclick=()=>{const was=ch.classList.contains("on");el.querySelectorAll(".chip").forEach(x=>{x.classList.remove("on");x.style.background="";});
+    if(!was){ch.classList.add("on");ch.style.background=c.color;}};el.appendChild(ch);});}
+function selectedCat(){const on=$("#f-cat").querySelector(".chip.on");return on?on.dataset.c:"";}
+function renderWdChips(sel){const el=$("#rep-wd");el.innerHTML="";MON_ORDER.forEach(jd=>{const on=(sel||[]).indexOf(jd)>=0;
+  const c=document.createElement("span");c.className="chip wd"+(on?" on":"");c.dataset.d=jd;c.textContent=WD_CN[jd];
+  c.onclick=()=>c.classList.toggle("on");el.appendChild(c);});}
+function selectedWd(){return [...$("#rep-wd").querySelectorAll(".chip.on")].map(c=>+c.dataset.d);}
+function repMode(){const r=document.querySelector('input[name=rep]:checked');return r?r.value:"none";}
+function syncRepDetail(){$("#rep-detail").classList.toggle("hidden",repMode()!=="weekly");}
+function blankForm(){editingId=null;$("#form-title").textContent="新建事件";$("#f-title").value="";$("#f-date").value=todayStr();
+  $("#f-allday").checked=false;$("#f-start").value="16:00";$("#f-end").value="17:00";$("#f-loc").value="";$("#f-notes").value="";$("#f-remind").value="";
+  renderPeopleChips([]);renderCatChips("");
+  document.querySelector('input[name=rep][value=none]').checked=true;$("#rep-interval").value=1;renderWdChips([parseISO(todayStr()).getDay()]);$("#rep-until").value="";syncRepDetail();
+  formAttachments=[];renderChips();$("#qa-text").value="";$("#qa-status").textContent="";refreshQaButton();}
+async function loadForm(ev){editingId=ev.id;$("#form-title").textContent="编辑事件";$("#f-title").value=ev.title;$("#f-date").value=ev.date;
+  $("#f-allday").checked=ev.allDay;$("#f-start").value=ev.start;$("#f-end").value=ev.end;$("#f-loc").value=ev.location||"";$("#f-notes").value=ev.notes||"";
+  $("#f-remind").value=ev.reminderLead===null?"":String(ev.reminderLead);
+  renderPeopleChips(ev.people||[]);renderCatChips(ev.category||"");
+  if(ev.recurrence){document.querySelector('input[name=rep][value=weekly]').checked=true;$("#rep-interval").value=ev.recurrence.interval||1;renderWdChips(ev.recurrence.byday||[]);$("#rep-until").value=ev.recurrence.until||"";}
+  else{document.querySelector('input[name=rep][value=none]').checked=true;$("#rep-interval").value=1;renderWdChips([parseISO(ev.date).getDay()]);$("#rep-until").value="";}
+  syncRepDetail();
+  formAttachments=[];try{const recs=await idbByEvent(ev.id);formAttachments=recs.map(r=>({id:r.id,name:r.name,type:r.type,size:r.size,b64:r.b64}));}catch(e){}
+  renderChips();$("#qa-text").value="";$("#qa-status").textContent="";refreshQaButton();goTab("new");}
+function collectForm(){const title=$("#f-title").value.trim();const date=$("#f-date").value;
+  if(!title){toast("请填标题。");return null;}if(!date){toast("请选日期。");return null;}
+  const allDay=$("#f-allday").checked;let start=$("#f-start").value||"09:00",end=$("#f-end").value||"10:00";
+  if(!allDay&&toMin(end)<=toMin(start)){toast("结束时间要晚于开始时间。");return null;}
+  let recurrence=null;
+  if(repMode()==="weekly"){const byday=selectedWd();if(!byday.length){toast("请选每周重复的星期几。");return null;}
+    recurrence={freq:"weekly",interval:Math.max(1,+$("#rep-interval").value||1),byday,until:$("#rep-until").value||null};}
+  const remindRaw=$("#f-remind").value;
+  return{title,date,allDay,start,end,people:selectedPeople(),category:selectedCat(),location:$("#f-loc").value.trim(),
+    notes:$("#f-notes").value.trim(),reminderLead:remindRaw===""?null:+remindRaw,recurrence};}
+async function persistAttachments(eventId){try{await idbDeleteByEvent(eventId);let n=0;for(const a of formAttachments){await idbPut({id:a.id,eventId,name:a.name,type:a.type,size:a.size,b64:a.b64,addedAt:Date.now()});n++;}return n;}catch(e){return formAttachments.length;}}
+if(typeof document!=="undefined"){
+  $$('input[name=rep]').forEach(r=>r.addEventListener("change",syncRepDetail));
+  $("#f-allday").addEventListener("change",()=>{const on=$("#f-allday").checked;$("#f-start").disabled=on;$("#f-end").disabled=on;});
+  $("#clear-form").onclick=blankForm;
+  $("#save-event").onclick=async()=>{const d=collectForm();if(!d)return;let ev=editingId?state.events.find(x=>x.id===editingId):null;const wasEdit=!!ev;
+    if(ev){const oldDone=ev.done,oldSkip=ev.skip;Object.assign(ev,d);ev.done=oldDone;ev.skip=oldSkip;}
+    else{ev=Object.assign({id:uid(),createdAt:Date.now(),seq:0,skip:[],done:[],attCount:0},d);state.events.push(ev);}
+    touch(ev);saveState();
+    ev.attCount=await persistAttachments(ev.id);saveState();toast(wasEdit?"已更新":"已添加");blankForm();refreshViews();goTab("calendar");};
+}
+
+/* ---------- attachments UI ---------- */
+function renderChips(){const el=$("#attach-chips");if(!el)return;el.innerHTML="";formAttachments.forEach(a=>{const d=document.createElement("span");d.className="chip-a";
+  d.innerHTML='<span class="nm">'+escapeHtml(a.name||"文件")+'</span><button title="移除">&times;</button>';
+  d.querySelector("button").onclick=()=>{formAttachments=formAttachments.filter(x=>x.id!==a.id);renderChips();};el.appendChild(d);});}
+async function addFiles(fileList){for(const f of fileList){try{const b64=await fileToB64(f);formAttachments.push({id:uid(),name:f.name||("file-"+Date.now()),type:f.type||"application/octet-stream",size:f.size||0,b64});}catch(e){}}renderChips();}
+function addTextDrop(html,txt){const content=html||txt;const name=html?"dropped-email.html":"dropped-note.txt";const type=html?"text/html":"text/plain";
+  const b64=btoa(unescape(encodeURIComponent(content)));formAttachments.push({id:uid(),name,type,size:content.length,b64});renderChips();}
+if(typeof document!=="undefined"){const dz=$("#dropzone");
+  ["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("drag");}));
+  ["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();if(ev==="dragleave"&&dz.contains(e.relatedTarget))return;dz.classList.remove("drag");}));
+  dz.addEventListener("drop",e=>{const dt=e.dataTransfer;if(!dt)return;if(dt.files&&dt.files.length)addFiles(dt.files);
+    else{const html=dt.getData&&dt.getData("text/html");const txt=dt.getData&&dt.getData("text/plain");if(html||txt)addTextDrop(html,txt);}});
+  document.addEventListener("paste",e=>{if($("#tab-new").classList.contains("hidden"))return;const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+    const imgs=[...items].filter(i=>i.type&&i.type.startsWith("image/")).map(i=>i.getAsFile()).filter(Boolean);if(imgs.length){addFiles(imgs);toast("截图已附加");}});
+}
+
+/* ---------- AI provider ---------- */
+function baseUrl(){return (state.settings.local.baseUrl||"http://localhost:1234/v1").replace(/\/+$/,"");}
+function provCfg(){const s=state.settings,p=s.provider||"local";
+  if(p==="claude")return{fmt:"anthropic",model:s.claude.model,chat:"https://api.anthropic.com/v1/messages",models:"https://api.anthropic.com/v1/models",headers:{"content-type":"application/json","x-api-key":s.claude.apiKey||"","anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"}};
+  if(p==="gemini")return{fmt:"openai",model:s.gemini.model,chat:"https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",models:"https://generativelanguage.googleapis.com/v1beta/openai/models",headers:{"content-type":"application/json","Authorization":"Bearer "+(s.gemini.apiKey||"")}};
+  const h={"content-type":"application/json"};if(s.local.key)h["Authorization"]="Bearer "+s.local.key;
+  return{fmt:"openai",model:s.local.model,chat:baseUrl()+"/chat/completions",models:baseUrl()+"/models",headers:h};}
+async function callModel(systemText,userText){const c=provCfg();if(!c.model)throw new Error("未选择模型 — 请在「设置」里配置。");
+  let body;if(c.fmt==="anthropic")body={model:c.model,max_tokens:800,system:systemText,messages:[{role:"user",content:userText}]};
+  else body={model:c.model,messages:[{role:"system",content:systemText},{role:"user",content:userText}],max_tokens:800,temperature:0.2,stream:false};
+  const res=await fetch(c.chat,{method:"POST",headers:c.headers,body:JSON.stringify(body)});
+  let data;try{data=await res.json();}catch(e){throw new Error("无法解析响应("+res.status+")。");}
+  if(!res.ok)throw new Error((data&&data.error&&(data.error.message||data.error))||("请求失败("+res.status+")"));
+  if(c.fmt==="anthropic")return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+  const msg=data.choices&&data.choices[0]&&data.choices[0].message;return msg?(typeof msg.content==="string"?msg.content.trim():(Array.isArray(msg.content)?msg.content.map(x=>x.text||"").join("\n").trim():"")):"";}
+async function loadModels(){const c=provCfg();const res=await fetch(c.models,{headers:c.headers});if(!res.ok)throw new Error("无法读取模型列表("+res.status+")");
+  const data=await res.json();const ids=(data&&data.data||[]).map(m=>m.id||m.name).filter(Boolean);
+  const dl=$("#model-list");dl.innerHTML="";ids.forEach(id=>{const o=document.createElement("option");o.value=id;dl.appendChild(o);});
+  if(!$("#set-model").value&&ids.length)$("#set-model").value=ids[0];return ids;}
+function refreshQaButton(){const ok=!!provCfg().model;const b=$("#qa-go");if(b){b.disabled=!ok;b.title=ok?"":"先在「设置」里配置 AI";}}
+// parse one sentence into an event object (best-effort, applied to the form for review)
+function aiSystemPrompt(){const d=new Date();const wd=WD_CN[d.getDay()];const cats=(state.settings.categories||[]).map(c=>c.name).join("、");const ppl=(state.settings.people||[]).join("、");
+  return "你把一句中文或英文描述,转成一个家庭日历事件,只返回 JSON,不要任何解释或代码围栏。今天是 "+todayStr()+"(周"+wd+")。可用分类:"+cats+"。家人:"+ppl+"。"
+    +'格式:{"title":"","date":"YYYY-MM-DD","allDay":false,"start":"HH:MM","end":"HH:MM","people":[],"category":"<分类名之一或空>","location":"","notes":"","recurrence":null}。'
+    +'若提到每周固定(如"每周三"),recurrence 用 {"freq":"weekly","interval":1,"byday":[0-6,其中0=周日,1=周一],"until":null},并把 date 设为最近一次发生的日期。时间精确到分钟,默认时长 1 小时。无法判断的字段给合理默认或空。';}
+function applyParsed(p){if(p.title)$("#f-title").value=p.title;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(p.date||""))$("#f-date").value=p.date;
+  $("#f-allday").checked=!!p.allDay;$("#f-start").disabled=!!p.allDay;$("#f-end").disabled=!!p.allDay;
+  if(/^\d{2}:\d{2}$/.test(p.start||""))$("#f-start").value=p.start;
+  if(/^\d{2}:\d{2}$/.test(p.end||""))$("#f-end").value=p.end;
+  if(p.location)$("#f-loc").value=p.location;if(p.notes)$("#f-notes").value=p.notes;
+  // people fuzzy match
+  const sel=[];(p.people||[]).forEach(n=>{const m=(state.settings.people||[]).find(x=>x===n||x.indexOf(n)>=0||n.indexOf(x)>=0);if(m&&sel.indexOf(m)<0)sel.push(m);});renderPeopleChips(sel);
+  // category by name
+  let cid="";if(p.category){const c=(state.settings.categories||[]).find(x=>x.name===p.category||x.name.indexOf(p.category)>=0);if(c)cid=c.id;}renderCatChips(cid);
+  if(p.recurrence&&p.recurrence.freq==="weekly"){document.querySelector('input[name=rep][value=weekly]').checked=true;$("#rep-interval").value=p.recurrence.interval||1;
+    const bd=Array.isArray(p.recurrence.byday)?p.recurrence.byday.filter(x=>x>=0&&x<=6):[];renderWdChips(bd.length?bd:[parseISO($("#f-date").value).getDay()]);$("#rep-until").value=p.recurrence.until||"";}
+  else{document.querySelector('input[name=rep][value=none]').checked=true;}
+  syncRepDetail();}
+if(typeof document!=="undefined")$("#qa-go")&&($("#qa-go").onclick=async()=>{const text=$("#qa-text").value.trim();if(!text){toast("先写一句描述。");return;}
+  const st=$("#qa-status");st.innerHTML='<span class="spinner"></span> 正在解析…';
+  try{const txt=await callModel(aiSystemPrompt(),text);let t=txt.replace(/```json/gi,"").replace(/```/g,"").trim();const a=t.indexOf("{"),b=t.lastIndexOf("}");if(a>=0&&b>=0)t=t.slice(a,b+1);
+    const obj=JSON.parse(t);applyParsed(obj);st.innerHTML='<span class="test-ok">已填入 — 请核对后保存。</span>';}
+  catch(e){st.innerHTML='<span class="test-bad">解析失败:'+escapeHtml(e.message)+'</span>';}});
+
+/* ---------- ICS export ---------- */
+function pad2(n){return String(n).padStart(2,"0");}
+function icsEscape(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");}
+function fold(line){if(line.length<=72)return line;let o="",i=0;while(i<line.length){const c=line.slice(i,i+72);o+=(i===0?c:"\r\n "+c);i+=72;}return o;}
+function dtStamp(){const d=new Date();return d.getUTCFullYear()+pad2(d.getUTCMonth()+1)+pad2(d.getUTCDate())+"T"+pad2(d.getUTCHours())+pad2(d.getUTCMinutes())+pad2(d.getUTCSeconds())+"Z";}
+function dtLocal(dateStr,timeStr){const[y,m,d]=dateStr.split("-").map(Number);const[hh,mm]=(timeStr||"09:00").split(":").map(Number);return y+pad2(m)+pad2(d)+"T"+pad2(hh)+pad2(mm)+"00";}
+function dateOnly(dateStr){const[y,m,d]=dateStr.split("-").map(Number);return y+pad2(m)+pad2(d);}
+function vevent(ev){const L=["BEGIN:VEVENT","UID:"+ev.id+"@dontforget","DTSTAMP:"+dtStamp(),"SEQUENCE:"+(ev.seq||0),"SUMMARY:"+icsEscape(ev.title)];
+  if(ev.allDay){L.push("DTSTART;VALUE=DATE:"+dateOnly(ev.date));const nd=isoOf(addDays(parseISO(ev.date),1));L.push("DTEND;VALUE=DATE:"+dateOnly(nd));}
+  else{L.push("DTSTART:"+dtLocal(ev.date,ev.start));L.push("DTEND:"+dtLocal(ev.date,ev.end));}
+  if(ev.recurrence){const r=ev.recurrence;let rule="RRULE:FREQ=WEEKLY;WKST=MO";if(r.interval>1)rule+=";INTERVAL="+r.interval;
+    if(r.byday&&r.byday.length)rule+=";BYDAY="+r.byday.slice().sort().map(x=>ICS_DAY[x]).join(",");
+    if(r.until)rule+=";UNTIL="+dateOnly(r.until)+(ev.allDay?"":"T235959");L.push(rule);
+    (ev.skip||[]).forEach(s=>{L.push(ev.allDay?("EXDATE;VALUE=DATE:"+dateOnly(s)):("EXDATE:"+dtLocal(s,ev.start)));});}
+  const desc=[ev.notes,ev.people&&ev.people.length?("参与:"+ev.people.join("、")):""].filter(Boolean).join(" | ");
+  if(desc)L.push("DESCRIPTION:"+icsEscape(desc));
+  if(ev.location)L.push("LOCATION:"+icsEscape(ev.location));
+  const lead=ev.reminderLead===null?state.settings.reminderLead:ev.reminderLead;
+  if(lead>=0&&!ev.allDay){L.push("BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEscape(ev.title),"TRIGGER:-PT"+lead+"M","END:VALARM");}
+  L.push("END:VEVENT");return L;}
+function buildICS(events){let L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//DontForget//Local//CN","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
+  events.forEach(ev=>{L=L.concat(vevent(ev));});L.push("END:VCALENDAR");return L.map(fold).join("\r\n");}
+function exportICS(events){if(!events.length){toast("没有可导出的事件。");return;}
+  const blob=new Blob([buildICS(events)],{type:"text/calendar;charset=utf-8"});const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=(events.length===1?(events[0].title.replace(/[\\/:*?"<>|]/g,"_")||"event"):"dontforget-all")+".ics";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("已导出 "+events.length+" 个事件 — 双击导入日历");}
+
+/* ---------- settings ---------- */
+function renderPeopleList(){const el=$("#people-list");el.innerHTML="";state.settings.people.forEach((name,i)=>{const d=document.createElement("span");d.className="person";
+  d.innerHTML=av(name)+escapeHtml(name)+'<button title="移除">&times;</button>';
+  d.querySelector("button").onclick=()=>{state.settings.people.splice(i,1);saveState();Sync.markMeta();renderPeopleList();};el.appendChild(d);});}
+function addPerson(){const v=$("#new-person").value.trim();if(!v)return;if(!state.settings.people.includes(v))state.settings.people.push(v);$("#new-person").value="";saveState();Sync.markMeta();renderPeopleList();}
+function renderCatList(){const el=$("#cat-list");el.innerHTML="";state.settings.categories.forEach((c,i)=>{const row=document.createElement("div");row.className="catedit";
+  row.innerHTML='<input type="color" value="'+c.color+'"><input type="text" value="'+escapeHtml(c.name)+'"><button class="btn ghost sm" style="color:var(--danger)">删除</button>';
+  const[col,nm,del]=row.querySelectorAll("input,button");
+  col.onchange=()=>{c.color=col.value;saveState();Sync.markMeta();};nm.onchange=()=>{c.name=nm.value.trim()||c.name;saveState();Sync.markMeta();};
+  del.onclick=()=>{state.settings.categories.splice(i,1);saveState();Sync.markMeta();renderCatList();};el.appendChild(row);});}
+function addCat(){const v=$("#new-cat").value.trim();if(!v)return;state.settings.categories.push({id:uid(),name:v,color:"#"+((Math.random()*0xffffff|0).toString(16).padStart(6,"0"))});$("#new-cat").value="";saveState();Sync.markMeta();renderCatList();}
+function fillHourSelects(){const ss=$("#set-start"),se=$("#set-end");if(!ss)return;ss.innerHTML="";se.innerHTML="";
+  for(let h=0;h<=23;h++){ss.innerHTML+='<option value="'+h+'">'+pad(h)+':00</option>';}
+  for(let h=1;h<=24;h++){se.innerHTML+='<option value="'+h+'">'+pad(h===24?0:h)+':00'+(h===24?"(次日)":"")+'</option>';}}
+function showProvBlocks(p){["local","claude","gemini"].forEach(x=>$("#prov-"+x).classList.toggle("hidden",x!==p));}
+function curModel(){const s=state.settings,p=s.provider;return p==="claude"?s.claude.model:p==="gemini"?s.gemini.model:s.local.model;}
+function fillSettings(){const s=state.settings;renderPeopleList();Sync.renderCard();renderCatList();fillHourSelects();
+  $("#set-start").value=String(s.dayStart);$("#set-end").value=String(s.dayEnd);$("#set-lead").value=String(s.reminderLead);
+  $("#set-provider").value=s.provider;showProvBlocks(s.provider);
+  $("#l-baseurl").value=s.local.baseUrl||"";$("#l-key").value=s.local.key||"";$("#c-key").value=s.claude.apiKey||"";$("#g-key").value=s.gemini.apiKey||"";
+  $("#set-model").value=curModel()||"";$("#notify-btn").textContent=s.notify?"桌面提醒已开":"开启桌面提醒";loadModels().catch(()=>{});}
+function syncProviderInputs(){const s=state.settings;s.provider=$("#set-provider").value;
+  s.local.baseUrl=$("#l-baseurl").value.trim()||"http://localhost:1234/v1";s.local.key=$("#l-key").value.trim();
+  s.claude.apiKey=$("#c-key").value.trim();s.gemini.apiKey=$("#g-key").value.trim();
+  const m=$("#set-model").value.trim();if(s.provider==="claude")s.claude.model=m;else if(s.provider==="gemini")s.gemini.model=m;else s.local.model=m;}
+if(typeof document!=="undefined"){
+  $("#add-person").onclick=addPerson;$("#new-person").addEventListener("keydown",e=>{if(e.key==="Enter")addPerson();});
+  $("#add-cat").onclick=addCat;$("#new-cat").addEventListener("keydown",e=>{if(e.key==="Enter")addCat();});
+  $("#set-provider").onchange=()=>{state.settings.provider=$("#set-provider").value;showProvBlocks(state.settings.provider);$("#set-model").value=curModel()||"";$("#test-result").textContent="";loadModels().catch(()=>{});refreshQaButton();};
+  $("#save-settings").onclick=()=>{const s=state.settings;s.dayStart=+$("#set-start").value;s.dayEnd=+$("#set-end").value;if(s.dayEnd<=s.dayStart)s.dayEnd=s.dayStart+1;s.reminderLead=+$("#set-lead").value;syncProviderInputs();saveState();refreshQaButton();toast("设置已保存");};
+  $("#refresh-models").onclick=async()=>{syncProviderInputs();saveState();const r=$("#test-result");r.className="hint";r.textContent="加载模型中…";
+    try{const ids=await loadModels();syncProviderInputs();saveState();refreshQaButton();r.innerHTML='<span class="test-ok">已加载 '+ids.length+' 个模型</span>';}catch(e){r.innerHTML='<span class="test-bad">'+escapeHtml(e.message)+'</span>';}};
+  $("#test-btn").onclick=async()=>{const r=$("#test-result");r.className="hint";r.textContent="测试中…";syncProviderInputs();saveState();
+    try{const ids=await loadModels();refreshQaButton();r.innerHTML='<span class="test-ok">已连接 ✓ — 可用 '+ids.length+' 个模型</span>';}catch(e){r.innerHTML='<span class="test-bad">失败:'+escapeHtml(e.message)+'</span>';}};
+  $("#notify-btn").onclick=async()=>{if(!("Notification"in window)){toast("此浏览器不支持桌面通知。");return;}const perm=await Notification.requestPermission();state.settings.notify=(perm==="granted");saveState();fillSettings();toast(perm==="granted"?"桌面提醒已开":"通知权限被拒绝");};
+  /* data */
+  $("#export-data").onclick=()=>{const copy=JSON.parse(JSON.stringify(state));
+    copy.settings.local.key="";copy.settings.claude.apiKey="";copy.settings.gemini.apiKey="";
+    const blob=new Blob([JSON.stringify(copy,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download="dontforget-backup.json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("已导出(不含密钥)");};
+  $("#import-data").onclick=()=>$("#import-input").click();
+  $("#import-input").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);
+    if(!o||!Array.isArray(o.events))throw new Error("格式不对");const cur=state.settings;const ns=normSettings(o.settings);
+    ns.local.key=ns.local.key||cur.local.key;ns.claude.apiKey=ns.claude.apiKey||cur.claude.apiKey;ns.gemini.apiKey=ns.gemini.apiKey||cur.gemini.apiKey;
+    const oldIds=state.events.map(x=>x.id);state={version:1,settings:ns,events:normEvents(o.events)};Sync.onImport(oldIds);saveState();toast("已导入");fillSettings();refreshViews();}catch(err){toast("导入失败:"+err.message);}};r.readAsText(f);e.target.value="";};
+  $("#export-ics").onclick=()=>exportICS(state.events||[]);
+  $("#clear-data").onclick=()=>{if(confirm(Sync.enabled()?"清空本机全部事件和设置?云端数据不会被删除,并会重新下载到本机。":"清空全部事件和设置?不可撤销。")){state={version:1,settings:normSettings({}),events:[]};Sync.onClear();saveState();fillSettings();refreshViews();toast("已清空");}};
+}
+
+/* ---------- reminders ---------- */
+const _notified=new Set();
+function checkReminders(){if(typeof Notification==="undefined")return;if(!state.settings.notify||Notification.permission!=="granted")return;
+  const iso=todayStr();const now=new Date();const nowT=now.getTime();
+  occurrencesOn(iso).forEach(o=>{if(o.allDay||o.done)return;const lead=o.ev.reminderLead===null?state.settings.reminderLead:o.ev.reminderLead;if(lead<0)return;
+    const[hh,mm]=o.start.split(":").map(Number);const startT=new Date(now.getFullYear(),now.getMonth(),now.getDate(),hh,mm,0).getTime();
+    const key=o.ev.id+"|"+iso;if(_notified.has(key))return;
+    if(nowT>=startT-lead*60000&&nowT<startT+60*60000){try{new Notification(o.ev.title,{body:o.start+(o.ev.location?" · "+o.ev.location:"")});}catch(e){}_notified.add(key);}});}
+
+/* ---------- cloud sync (Cloudflare Worker + D1) ---------- */
+// 本地优先:所有改动先写本机,再在后台推送;每个事件带 updatedAt,冲突时后写者胜;删除用"墓碑"记录。
+// 同步配置(地址/密码/游标)单独存一个 key,不进 state,所以不会被导出、也不会被导入覆盖。
+const SYNC_KEY="dontforget_sync_v1";
+function rawSet(k,v){try{if(lsOK){localStorage.setItem(k,v);return;}}catch(e){}memStore=memStore||{};memStore[k]=v;}
+function touch(ev){ev.updatedAt=Math.max(Date.now(),(ev.updatedAt||0)+1);ev.seq=(ev.seq||0)+1;Sync.markDirty(ev.id);}
+const Sync=(function(){
+  const META="__meta__",CHUNK=50,MAX_ROUNDS=80;
+  let cfg=loadCfg(),running=false,again=false,timer=null,last={kind:"off",text:"☁ 未同步"};
+  function loadCfg(){let o={};try{o=JSON.parse(rawGet(SYNC_KEY)||"{}")||{};}catch(e){}
+    return{url:o.url||"",password:o.password||"",cursor:+o.cursor||0,dirty:o.dirty||{},tombs:o.tombs||{},
+      metaTs:+o.metaTs||0,firstDone:!!o.firstDone,lastSync:+o.lastSync||0,icsPath:o.icsPath||""};}
+  function save(){rawSet(SYNC_KEY,JSON.stringify(cfg));}
+  function enabled(){return !!(cfg.url&&cfg.password);}
+  function base(){return cfg.url.replace(/\/+$/,"");}
+  function badge(kind,text){last={kind:kind,text:text};
+    const b=document.getElementById("sync-badge");if(b){b.className="sync-badge "+kind;b.textContent=text;}
+    const s=document.getElementById("sy-status");if(s){s.className="hint"+(kind==="err"?" test-bad":kind==="ok"?" test-ok":"");s.textContent=text;}}
+  function hhmm(ms){const d=new Date(ms);return pad(d.getHours())+":"+pad(d.getMinutes());}
+  function schedule(ms){if(!enabled())return;clearTimeout(timer);timer=setTimeout(run,ms==null?1500:ms);}
+
+  function markDirty(id){cfg.dirty[id]=1;delete cfg.tombs[id];save();schedule();}
+  function markDeleted(id,prevTs){cfg.tombs[id]=Math.max(Date.now(),(prevTs||0)+1);delete cfg.dirty[id];save();schedule();}
+  function markMeta(){cfg.metaTs=Math.max(Date.now(),cfg.metaTs+1);cfg.dirty[META]=1;save();schedule();}
+
+  function metaPayload(){return JSON.stringify({people:state.settings.people,categories:state.settings.categories});}
+
+  // 合并服务器发来的改动。返回 {ev:是否改了事件, meta:是否改了家人/分类}
+  function applyRemote(rows){const res={ev:false,meta:false};
+    rows.forEach(r=>{
+      if(r.id===META){
+        if(r.updatedAt>cfg.metaTs){try{const m=JSON.parse(r.data);
+          if(Array.isArray(m.people)&&m.people.length)state.settings.people=m.people;
+          if(Array.isArray(m.categories)&&m.categories.length)state.settings.categories=m.categories;
+          cfg.metaTs=r.updatedAt;delete cfg.dirty[META];res.meta=true;}catch(e){}}
+        return;}
+      const i=state.events.findIndex(e=>e.id===r.id),local=i>=0?state.events[i]:null;
+      if(r.deleted){
+        if(local&&(local.updatedAt||0)<=r.updatedAt){state.events.splice(i,1);delete cfg.dirty[r.id];idbDeleteByEvent(r.id);res.ev=true;}
+        return;}
+      if(cfg.tombs[r.id]&&cfg.tombs[r.id]>=r.updatedAt)return;   // 本机删得更晚
+      if(local&&(local.updatedAt||0)>=r.updatedAt)return;        // 本机更新或相同
+      let d;try{d=JSON.parse(r.data);}catch(e){return;}
+      const ne=normEvents([d])[0];ne.id=r.id;ne.updatedAt=r.updatedAt;
+      if(local){ne.attCount=local.attCount||0;state.events[i]=ne;}else{ne.attCount=0;state.events.push(ne);}
+      delete cfg.dirty[r.id];res.ev=true;});
+    return res;}
+
+  async function run(){
+    if(!enabled())return;
+    if(running){again=true;return;}
+    running=true;badge("busy","☁ 同步中…");
+    let any=false;
+    try{
+      if(!cfg.firstDone){                       // 首次连接:把本机现有内容全部标记为待上传
+        state.events.forEach(e=>{if(!e.updatedAt)e.updatedAt=e.createdAt||Date.now();cfg.dirty[e.id]=1;});
+        cfg.dirty[META]=1;save();}
+      for(let round=0;round<MAX_ROUNDS;round++){
+        const changes=[],sent=[];
+        for(const id of Object.keys(cfg.dirty)){if(changes.length>=CHUNK)break;
+          if(id===META){const ts=cfg.metaTs;changes.push({id:id,updatedAt:ts,deleted:0,data:metaPayload()});sent.push({id:id,ts:ts});continue;}
+          const ev=state.events.find(e=>e.id===id);
+          if(!ev){delete cfg.dirty[id];continue;}
+          const ts=ev.updatedAt||1;
+          changes.push({id:id,updatedAt:ts,deleted:0,data:JSON.stringify(Object.assign({},ev,{attCount:0}))});sent.push({id:id,ts:ts});}
+        for(const id of Object.keys(cfg.tombs)){if(changes.length>=CHUNK)break;
+          changes.push({id:id,updatedAt:cfg.tombs[id],deleted:1,data:"{}"});sent.push({id:id,ts:cfg.tombs[id],tomb:1});}
+
+        const res=await fetch(base()+"/api/sync",{method:"POST",
+          headers:{"Content-Type":"application/json","Authorization":"Bearer "+cfg.password},
+          body:JSON.stringify({since:cfg.cursor,changes:changes})});
+        if(res.status===401)throw new Error("家庭密码不对");
+        if(!res.ok)throw new Error("服务返回 "+res.status);
+        const out=await res.json();
+
+        sent.forEach(s=>{                       // 发送期间没被再次修改的,才算已同步
+          if(s.tomb){if(cfg.tombs[s.id]===s.ts)delete cfg.tombs[s.id];}
+          else if(s.id===META){if(cfg.metaTs===s.ts)delete cfg.dirty[META];}
+          else{const ev=state.events.find(e=>e.id===s.id);if(!ev||(ev.updatedAt||1)===s.ts)delete cfg.dirty[s.id];}});
+        const r=applyRemote(out.changes||[]);
+        cfg.cursor=Math.max(cfg.cursor,+out.cursor||0);
+        if(out.icsPath)cfg.icsPath=out.icsPath;
+        cfg.firstDone=true;save();
+        if(r.ev||r.meta){any=true;saveState();}
+        if(!(out.more||Object.keys(cfg.dirty).length||Object.keys(cfg.tombs).length))break;
+      }
+      cfg.lastSync=Date.now();save();
+      if(any){refreshViews();if(currentTab==="settings"){renderPeopleList();renderCatList();}}
+      badge("ok","☁ 已同步 "+hhmm(cfg.lastSync));renderIcs();
+    }catch(e){
+      const m=(e&&e.message)||"";
+      badge("err","☁ 同步失败:"+(/Failed to fetch|NetworkError|Load failed/i.test(m)?"连不上服务(检查网络、地址,或服务端 ALLOWED_ORIGINS)":m));
+    }finally{running=false;if(again){again=false;schedule(300);}}
+  }
+
+  function connect(url,pw){
+    if(url.replace(/\/+$/,"")!==cfg.url.replace(/\/+$/,"")||pw!==cfg.password){cfg.cursor=0;cfg.firstDone=false;cfg.icsPath="";}
+    cfg.url=url.replace(/\/+$/,"");cfg.password=pw;save();run();}
+  function disconnect(){cfg.url="";cfg.password="";cfg.cursor=0;cfg.dirty={};cfg.tombs={};cfg.firstDone=false;cfg.icsPath="";cfg.lastSync=0;save();badge("off","☁ 未同步");}
+  function onImport(oldIds){const now=Date.now();
+    state.events.forEach(e=>{e.updatedAt=Math.max(now,(e.updatedAt||0)+1);cfg.dirty[e.id]=1;delete cfg.tombs[e.id];});
+    (oldIds||[]).forEach(id=>{if(!state.events.some(e=>e.id===id)){cfg.tombs[id]=now;delete cfg.dirty[id];}});
+    cfg.dirty[META]=1;cfg.metaTs=Math.max(now,cfg.metaTs+1);save();schedule();}
+  function onClear(){cfg.cursor=0;cfg.dirty={};cfg.tombs={};cfg.metaTs=0;save();schedule(300);}
+
+  function renderIcs(){const box=document.getElementById("sy-ics");if(!box)return;
+    if(!(cfg.icsPath&&cfg.url)){box.classList.add("hidden");return;}
+    const http=base()+cfg.icsPath,web=http.replace(/^https?:/,"webcal:");
+    box.classList.remove("hidden");
+    box.innerHTML='<b>系统日历订阅链接</b>(只读,含全部日程,请勿外传):<br><code style="word-break:break-all">'+escapeHtml(http)+'</code>'
+      +'<div class="row" style="gap:8px;margin-top:8px"><button class="btn sm" id="sy-copy">复制链接</button>'
+      +'<a class="btn sm" style="text-decoration:none" href="'+escapeHtml(web)+'">在此设备订阅</a></div>'
+      +'<div style="margin-top:8px">iPhone:在 Safari 打开上面的「在此设备订阅」,或 设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历,粘贴链接。订阅日历是只读的,增删改仍在本页面;iPhone 刷新有延迟(通常几十分钟到数小时)。</div>';
+    document.getElementById("sy-copy").onclick=()=>{
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(http).then(()=>toast("已复制"),()=>prompt("复制这个链接:",http));
+      else prompt("复制这个链接:",http);};}
+  function renderCard(){const u=document.getElementById("sy-url");if(!u)return;
+    u.value=cfg.url;document.getElementById("sy-pw").value=cfg.password;badge(last.kind,last.text);renderIcs();}
+
+  if(typeof document!=="undefined"&&typeof window!=="undefined"){
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden)schedule(300);});
+    window.addEventListener("online",()=>schedule(300));
+    setInterval(()=>{if(!document.hidden)schedule(0);},90000);
+    setTimeout(()=>{if(enabled())run();else badge("off","☁ 未同步");},800);
+    document.getElementById("sy-save").onclick=()=>{
+      const u=document.getElementById("sy-url").value.trim(),p=document.getElementById("sy-pw").value;
+      if(!/^https?:\/\/.+/.test(u)||!p){toast("请填服务地址(https://…)和家庭密码。");return;}
+      if(!cfg.firstDone&&!confirm("首次连接会把本机现有事件上传,并与云端合并。\n\n如果另一台设备也已经有自己独立录入的数据,请先只保留其中一台的数据,其他设备先在「设置 → 清空全部」后再连接,否则会出现重复事件。\n\n继续?"))return;
+      connect(u,p);};
+    document.getElementById("sy-now").onclick=()=>{if(!enabled()){toast("先填写并保存同步设置。");return;}run();};
+    document.getElementById("sy-off").onclick=()=>{if(confirm("断开同步?本机数据保留,云端数据不受影响。")){disconnect();renderCard();toast("已断开");}};
+  }
+  return{markDirty:markDirty,markDeleted:markDeleted,markMeta:markMeta,schedule:schedule,run:run,enabled:enabled,
+    onImport:onImport,onClear:onClear,renderCard:renderCard,_cfg:()=>cfg};
+})();
+
+/* ---------- refresh / init ---------- */
+function refreshViews(){try{renderAgenda();}catch(e){}try{renderEvents();}catch(e){}if(currentTab==="calendar"){try{renderCalendar();}catch(e){}}}
+if(typeof document!=="undefined"&&typeof window!=="undefined"){
+  setInterval(()=>{checkReminders();if(currentTab==="calendar")renderCalendar();},60000);setTimeout(checkReminders,3000);
+  blankForm();renderAgenda();refreshQaButton();
+}
+
+/* ---------- test hooks ---------- */
+if(typeof window!=="undefined"){window.__DF__={occursOn,isDone,toggleDone,occurrencesOn,layoutDay,buildICS,vevent,normEvents,normSettings,toMin,minToTime,mondayOf,isoOf,parseISO,persistAttachments,idbByEvent,renderCalendar,getState:()=>state,setState:s=>{state=s;}};}
+</script>
+</body>
+</html>
